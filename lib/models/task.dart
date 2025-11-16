@@ -1,11 +1,31 @@
+/// Represents a task in the study planner application.
+/// 
+/// A task contains essential information like title, due date, and optional
+/// fields like description and reminder time. Tasks can be marked as completed.
 class Task {
+  /// Unique identifier for the task
   final String id;
+  
+  /// The title/name of the task (required)
   final String title;
+  
+  /// Optional description providing more details about the task
   final String? description;
+  
+  /// The date when the task is due (required)
   final DateTime dueDate;
+  
+  /// Optional reminder time for notifications
   final DateTime? reminderTime;
+  
+  /// Whether the task has been completed
   final bool isCompleted;
 
+  /// Creates a new Task instance.
+  /// 
+  /// [id] and [title] and [dueDate] are required.
+  /// [description] and [reminderTime] are optional.
+  /// [isCompleted] defaults to false.
   Task({
     required this.id,
     required this.title,
@@ -15,6 +35,7 @@ class Task {
     this.isCompleted = false,
   });
 
+  /// Converts the task to a JSON map for storage.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -26,6 +47,7 @@ class Task {
     };
   }
 
+  /// Creates a Task instance from a JSON map.
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       id: json['id'],
@@ -39,6 +61,9 @@ class Task {
     );
   }
 
+  /// Creates a copy of this task with optionally updated fields.
+  /// 
+  /// Only the specified fields will be updated, others remain unchanged.
   Task copyWith({
     String? id,
     String? title,

@@ -83,6 +83,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         task: selectedTasks[index],
                         onUpdate: widget.onUpdateTask,
                         onDelete: widget.onDeleteTask,
+                        onEdit: (task) => _showEditTaskDialog(task),
                       );
                     },
                   ),
@@ -103,6 +104,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
       builder: (context) => AddTaskDialog(
         onAddTask: widget.onAddTask,
         initialDate: _selectedDay,
+      ),
+    );
+  }
+
+  void _showEditTaskDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AddTaskDialog(
+        onAddTask: widget.onUpdateTask,
+        initialDate: task.dueDate,
+        editingTask: task,
       ),
     );
   }

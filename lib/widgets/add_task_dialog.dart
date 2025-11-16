@@ -4,11 +4,13 @@ import '../models/task.dart';
 class AddTaskDialog extends StatefulWidget {
   final Function(Task) onAddTask;
   final DateTime initialDate;
+  final Task? editingTask;
 
   const AddTaskDialog({
     Key? key,
     required this.onAddTask,
     required this.initialDate,
+    this.editingTask,
   }) : super(key: key);
 
   @override
@@ -25,12 +27,24 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate;
+    
+    if (widget.editingTask != null) {
+      final task = widget.editingTask!;
+      _titleController.text = task.title;
+      _descriptionController.text = task.description ?? '';
+      _selectedDate = task.dueDate;
+      if (task.reminderTime != null) {
+        _reminderTime = TimeOfDay.fromDateTime(task.reminderTime!);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.editingTask != null;
+    
     return AlertDialog(
-      title: Text('Add New Task'),
+      title: Text(isEditing ? 'Edit Task' : 'Add New Task'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -76,7 +90,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         ),
         ElevatedButton(
           onPressed: _saveTask,
-          child: Text('Save'),
+          child: Text(isEditing ? 'Update' : 'Save'),
         ),
       ],
     );
@@ -105,9 +119,24 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   }
 
   void _saveTask() {
-    if (_titleController.text.trim().isEmpty) {
+    final title = _titleController.text.trim();
+    
+    if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Title is required')),
+        SnackBar(
+          content: Text('Title is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (title.length > 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Title must be less than 100 characters'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -121,19 +150,39 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         _reminderTime!.hour,
         _reminderTime!.minute,
       );
+      
+      // Validate reminder time is not in the past
+      if (reminderDateTime.isBefore(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reminder time cannot be in the past'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
     }
 
+    final description = _descriptionController.text.trim();
+    final isEditing = widget.editingTask != null;
+    
     final task = Task(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty 
-          ? null 
-          : _descriptionController.text.trim(),
+      id: isEditing ? widget.editingTask!.id : DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      description: description.isEmpty ? null : description,
       dueDate: _selectedDate,
       reminderTime: reminderDateTime,
+      isCompleted: isEditing ? widget.editingTask!.isCompleted : false,
     );
 
     widget.onAddTask(task);
     Navigator.pop(context);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isEditing ? 'Task updated successfully' : 'Task added successfully'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 }

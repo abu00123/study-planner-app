@@ -1,30 +1,62 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:study_planner_app/main.dart';
+import 'package:study_planner_app/models/task.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('StudyPlannerApp Tests', () {
+    testWidgets('App loads with bottom navigation', (WidgetTester tester) async {
+      await tester.pumpWidget(StudyPlannerApp());
+      await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(find.byType(BottomNavigationBar), findsOneWidget);
+      expect(find.text('Today'), findsOneWidget);
+      expect(find.text('Calendar'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets('Can navigate between screens', (WidgetTester tester) async {
+      await tester.pumpWidget(StudyPlannerApp());
+      await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      await tester.tap(find.text('Calendar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Calendar'), findsWidgets);
+
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
+      expect(find.text('Enable Reminders'), findsOneWidget);
+    });
+  });
+
+  group('Task Model Tests', () {
+    test('Task creation and JSON serialization', () {
+      final task = Task(
+        id: '1',
+        title: 'Test Task',
+        description: 'Test Description',
+        dueDate: DateTime(2024, 1, 1),
+      );
+
+      expect(task.title, 'Test Task');
+      expect(task.isCompleted, false);
+
+      final json = task.toJson();
+      final taskFromJson = Task.fromJson(json);
+      expect(taskFromJson.title, task.title);
+      expect(taskFromJson.id, task.id);
+    });
+
+    test('Task copyWith method', () {
+      final task = Task(
+        id: '1',
+        title: 'Original',
+        dueDate: DateTime(2024, 1, 1),
+      );
+
+      final updatedTask = task.copyWith(isCompleted: true);
+      expect(updatedTask.isCompleted, true);
+      expect(updatedTask.title, 'Original');
+    });
   });
 }
